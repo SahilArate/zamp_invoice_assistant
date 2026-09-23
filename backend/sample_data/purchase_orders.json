@@ -1,0 +1,23 @@
+[
+  {
+    "po_number": "PO-1001",
+    "vendor_name": "ABC Ltd",
+    "po_amount": 100000,
+    "currency": "INR",
+    "used_amount": 0
+  },
+  {
+    "po_number": "PO-1002",
+    "vendor_name": "XYZ Traders",
+    "po_amount": 50000,
+    "currency": "INR",
+    "used_amount": 0
+  },
+  {
+    "po_number": "PO-1003",
+    "vendor_name": "Global Supplies Inc",
+    "po_amount": 25000,
+    "currency": "INR",
+    "used_amount": 15000
+  }
+]
