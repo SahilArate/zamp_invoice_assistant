@@ -4,6 +4,7 @@ import shutil
 
 from app.services.pdf_service import extract_text_from_pdf
 from app.services.ai_extraction_service import extract_invoice_fields
+from app.services.validation_service import validate_invoice
 
 router = APIRouter(prefix="/invoices", tags=["Invoices"])
 
@@ -27,9 +28,11 @@ async def upload_invoice(file: UploadFile = File(...)):
         }
 
     extracted_invoice = extract_invoice_fields(raw_text)
+    validation_result = validate_invoice(extracted_invoice)
 
     return {
-        "status": "extracted",
+        "status": "validated",
         "filename": file.filename,
-        "extracted_invoice": extracted_invoice.model_dump()
+        "extracted_invoice": extracted_invoice.model_dump(),
+        "validation": validation_result
     }
