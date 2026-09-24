@@ -6,3 +6,4 @@ __pycache__/
 *.log
 output/
 sample_data/uploads/
+sample_data/runs.json
