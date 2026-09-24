@@ -1,10 +1,10 @@
 import json
 from openai import OpenAI
 
-from app.core.config import GROK_API_KEY, GROK_BASE_URL, GROK_MODEL
+from app.core.config import GROQ_API_KEY, GROQ_BASE_URL, GROQ_MODEL
 from app.models.invoice import ExtractedInvoice
 
-client = OpenAI(api_key=GROK_API_KEY, base_url=GROK_BASE_URL)
+client = OpenAI(api_key=GROQ_API_KEY, base_url=GROQ_BASE_URL)
 
 EXTRACTION_PROMPT = """You are an invoice data extraction assistant.
 
@@ -30,7 +30,7 @@ def extract_invoice_fields(raw_text: str) -> ExtractedInvoice:
     prompt = EXTRACTION_PROMPT.format(invoice_text=raw_text)
 
     response = client.chat.completions.create(
-        model=GROK_MODEL,
+        model=GROQ_MODEL,
         messages=[{"role": "user", "content": prompt}],
         temperature=0,
     )

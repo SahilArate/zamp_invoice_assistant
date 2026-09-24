@@ -3,6 +3,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-GROK_API_KEY = os.getenv("GROK_API_KEY")
-GROK_BASE_URL = "https://api.x.ai/v1"
-GROK_MODEL = "grok-4-latest"
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+GROQ_BASE_URL = "https://api.groq.com/openai/v1"
+GROQ_MODEL = "openai/gpt-oss-120b"

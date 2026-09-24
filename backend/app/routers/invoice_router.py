@@ -3,6 +3,7 @@ from pathlib import Path
 import shutil
 
 from app.services.pdf_service import extract_text_from_pdf
+from app.services.ai_extraction_service import extract_invoice_fields
 
 router = APIRouter(prefix="/invoices", tags=["Invoices"])
 
@@ -17,11 +18,18 @@ async def upload_invoice(file: UploadFile = File(...)):
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    extracted_text = extract_text_from_pdf(file_path)
+    raw_text = extract_text_from_pdf(file_path)
+
+    if not raw_text:
+        return {
+            "status": "error",
+            "message": "No text could be extracted from this PDF. It may be a scanned image (OCR not yet implemented)."
+        }
+
+    extracted_invoice = extract_invoice_fields(raw_text)
 
     return {
-        "status": "received",
+        "status": "extracted",
         "filename": file.filename,
-        "text_found": bool(extracted_text),
-        "extracted_text_preview": extracted_text[:500]
+        "extracted_invoice": extracted_invoice.model_dump()
     }
