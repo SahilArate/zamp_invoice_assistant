@@ -50,3 +50,16 @@ def get_run_by_id(run_id: str) -> dict:
         if run["run_id"] == run_id:
             return run
     return None
+
+def check_duplicate(vendor_name: str, invoice_number: str, invoice_date: str, total: float) -> bool:
+    all_runs = _load_all_runs()
+    for run in all_runs:
+        inv = run["extracted_invoice"]
+        if (
+            inv.get("vendor_name") == vendor_name
+            and inv.get("invoice_number") == invoice_number
+            and inv.get("invoice_date") == invoice_date
+            and inv.get("total") == total
+        ):
+            return True
+    return False
