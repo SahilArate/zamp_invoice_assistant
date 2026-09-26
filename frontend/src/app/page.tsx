@@ -87,7 +87,23 @@ export default function Home() {
             cursor: loading ? "default" : "pointer",
           }}
         >
-          {loading ? "Processing..." : "Upload & Process"}
+          {loading ? (
+            <span style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <span
+                style={{
+                  width: "12px",
+                  height: "12px",
+                  border: "2px solid var(--text-muted)",
+                  borderTopColor: "var(--text-primary)",
+                  borderRadius: "50%",
+                  animation: "spin 0.6s linear infinite",
+                }}
+              />
+              Processing...
+            </span>
+          ) : (
+            "Upload & Process"
+          )}
         </button>
       </div>
 
