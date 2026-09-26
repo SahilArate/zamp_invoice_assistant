@@ -7,7 +7,7 @@ from app.services.ai_extraction_service import extract_invoice_fields
 from app.services.validation_service import validate_invoice
 from app.services.po_matching_service import match_invoice_to_po
 from app.services.decision_service import make_decision
-from app.services.run_service import save_run, get_all_runs, get_run_by_id
+from app.services.run_service import save_run, get_all_runs, get_run_by_id, check_duplicate
 
 router = APIRouter(prefix="/invoices", tags=["Invoices"])
 
@@ -33,7 +33,15 @@ async def upload_invoice(file: UploadFile = File(...)):
     extracted_invoice = extract_invoice_fields(raw_text)
     validation_result = validate_invoice(extracted_invoice)
     po_match_result = match_invoice_to_po(extracted_invoice)
-    decision_result = make_decision(validation_result, po_match_result)
+
+    is_duplicate = check_duplicate(
+        vendor_name=extracted_invoice.vendor_name,
+        invoice_number=extracted_invoice.invoice_number,
+        invoice_date=extracted_invoice.invoice_date,
+        total=extracted_invoice.total,
+    )
+
+    decision_result = make_decision(validation_result, po_match_result, is_duplicate)
 
     saved_run = save_run(
         filename=file.filename,

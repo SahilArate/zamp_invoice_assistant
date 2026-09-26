@@ -1,5 +1,12 @@
-def make_decision(validation_result: dict, po_match_result: dict) -> dict:
+def make_decision(validation_result: dict, po_match_result: dict, is_duplicate: bool = False) -> dict:
     checks = po_match_result["checks"]
+
+    if is_duplicate:
+        return {
+            "decision": "REJECT",
+            "reason": "Duplicate invoice — an identical invoice has already been processed.",
+            "supporting_details": ["Matched on vendor, invoice number, date, and total against a previous run."],
+        }
 
     if not validation_result["is_valid"]:
         return {
