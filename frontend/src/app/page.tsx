@@ -12,7 +12,7 @@ type RunResult = {
     po_number: string | null;
     field_confidence?: Record<string, number>;
   };
-  validation: { is_valid: boolean; issues: string[] };
+  validation: { is_valid: boolean; issues: string[]; warnings: string[] };
   po_matching: {
     checks: Record<string, boolean>;
     details: string[];
@@ -156,8 +156,30 @@ export default function Home() {
                 >
                   {result.decision.decision}
                 </div>
-                <div style={{ color: "var(--text-muted)" }}>{result.decision.reason}</div>
+              <div style={{ color: "var(--text-muted)" }}>{result.decision.reason}</div>
+            </div>
+
+            {result.validation.warnings.length > 0 && (
+              <div
+                style={{
+                  padding: "0.75rem 1rem",
+                  borderRadius: "6px",
+                  background: "var(--background)",
+                  border: "1px solid var(--status-flag)",
+                  marginBottom: "1rem",
+                  fontSize: "0.85rem",
+                }}
+              >
+                <div style={{ color: "var(--status-flag)", fontWeight: 600, marginBottom: "0.3rem" }}>
+                  ⚠ Non-blocking warnings
+                </div>
+                {result.validation.warnings.map((w, i) => (
+                  <div key={i} style={{ color: "var(--text-muted)", padding: "0.1rem 0" }}>
+                    — {w}
+                  </div>
+                ))}
               </div>
+            )}
 
               <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.9rem", lineHeight: 1.7 }}>
                 <div>Invoice: {result.extracted_invoice.invoice_number}</div>

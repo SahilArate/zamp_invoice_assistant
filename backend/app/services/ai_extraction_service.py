@@ -1,5 +1,6 @@
 import json
 from openai import OpenAI
+from app.services.normalization_service import normalize_invoice_dict
 
 from app.core.config import GROQ_API_KEY, GROQ_BASE_URL, GROQ_MODEL
 from app.models.invoice import ExtractedInvoice
@@ -48,4 +49,5 @@ def extract_invoice_fields(raw_text: str) -> ExtractedInvoice:
             raw_output = raw_output[4:]
 
     data = json.loads(raw_output)
+    data = normalize_invoice_dict(data)
     return ExtractedInvoice(**data)
