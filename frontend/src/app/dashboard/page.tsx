@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { API_URL } from "@/lib/api";
 
 type Run = {
   run_id: string;
@@ -26,7 +27,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/invoices/runs")
+    fetch(`${API_URL}/invoices/runs`)
       .then((res) => res.json())
       .then((data) => {
         setRuns(data);

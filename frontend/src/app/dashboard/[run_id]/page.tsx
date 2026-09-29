@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { API_URL } from "@/lib/api";
 
 type RunDetail = {
   run_id: string;
@@ -41,7 +42,7 @@ export default function RunDetail() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`http://127.0.0.1:8000/invoices/runs/${runId}`)
+    fetch(`${API_URL}/invoices/runs/${runId}`)
       .then((res) => res.json())
       .then((data) => {
         setRun(data);

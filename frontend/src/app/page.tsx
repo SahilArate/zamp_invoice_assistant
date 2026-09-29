@@ -1,5 +1,6 @@
 "use client";
 
+import { API_URL } from "@/lib/api";
 import { useState } from "react";
 
 type RunResult = {
@@ -50,7 +51,7 @@ export default function Home() {
     const formData = new FormData();
     formData.append("file", file);
 
-    const response = await fetch("http://127.0.0.1:8000/invoices/upload", {
+    const response = await fetch(`${API_URL}/invoices/upload`, {
       method: "POST",
       body: formData,
     });
