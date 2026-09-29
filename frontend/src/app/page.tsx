@@ -10,6 +10,7 @@ type RunResult = {
     invoice_number: string | null;
     total: number | null;
     po_number: string | null;
+    field_confidence?: Record<string, number>;
   };
   validation: { is_valid: boolean; issues: string[] };
   po_matching: {
@@ -164,6 +165,36 @@ export default function Home() {
                 <div>PO: {result.extracted_invoice.po_number}</div>
                 <div>Total: ₹{result.extracted_invoice.total?.toLocaleString()}</div>
               </div>
+
+              {result.extracted_invoice.field_confidence && (
+                <div style={{ marginTop: "1rem" }}>
+                  <div style={{ color: "var(--text-muted)", marginBottom: "0.4rem" }}>
+                    AI extraction confidence
+                  </div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+                    {Object.entries(result.extracted_invoice.field_confidence).map(([field, score]) => {
+                      const numScore = Number(score);
+                      const color =
+                        numScore >= 0.8 ? "var(--status-approve)" : numScore >= 0.6 ? "var(--status-flag)" : "var(--status-reject)";
+                      return (
+                        <span
+                          key={field}
+                          style={{
+                            fontSize: "0.75rem",
+                            padding: "0.2rem 0.5rem",
+                            borderRadius: "4px",
+                            border: `1px solid ${color}`,
+                            color: color,
+                            fontFamily: "var(--font-mono)",
+                          }}
+                        >
+                          {field}: {(numScore * 100).toFixed(0)}%
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               <div style={{ marginTop: "1rem" }}>
                 <div style={{ color: "var(--text-muted)", marginBottom: "0.4rem" }}>
