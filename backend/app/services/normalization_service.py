@@ -84,6 +84,13 @@ def normalize_invoice_dict(data: dict) -> dict:
         item["quantity"] = normalize_amount(item.get("quantity"))
         item["unit_price"] = normalize_amount(item.get("unit_price"))
         item["amount"] = normalize_amount(item.get("amount"))
+
+        # If the AI didn't return an amount (or it failed to parse), calculate it
+        # ourselves from quantity x unit_price — we shouldn't depend on the AI for
+        # something we can compute deterministically.
+        if item["amount"] is None and item["quantity"] is not None and item["unit_price"] is not None:
+            item["amount"] = round(item["quantity"] * item["unit_price"], 2)
+
         normalized_items.append(item)
     data["line_items"] = normalized_items
 
