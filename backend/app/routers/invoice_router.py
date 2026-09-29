@@ -22,12 +22,14 @@ async def upload_invoice(file: UploadFile = File(...)):
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    raw_text = extract_text_from_pdf(file_path)
+    extraction_result = extract_text_from_pdf(file_path)
+    raw_text = extraction_result["text"]
+    text_source = extraction_result["source"]
 
     if not raw_text:
         return {
             "status": "error",
-            "message": "No text could be extracted from this PDF. It may be a scanned image (OCR not yet implemented)."
+            "message": "No text could be extracted from this PDF, even after OCR fallback."
         }
 
     extracted_invoice = extract_invoice_fields(raw_text)
@@ -49,6 +51,7 @@ async def upload_invoice(file: UploadFile = File(...)):
         validation=validation_result,
         po_matching=po_match_result,
         decision=decision_result,
+        text_source=text_source,
     )
 
     return saved_run.model_dump()

@@ -21,11 +21,12 @@ def _save_all_runs(runs: List[dict]) -> None:
         json.dump(runs, f, indent=2)
 
 
-def save_run(filename: str, extracted_invoice: dict, validation: dict, po_matching: dict, decision: dict) -> InvoiceRun:
+def save_run(filename: str, extracted_invoice: dict, validation: dict, po_matching: dict, decision: dict, text_source: str = "pdf_text") -> InvoiceRun:
     run = InvoiceRun(
         run_id=str(uuid.uuid4()),
         filename=filename,
         timestamp=datetime.now(timezone.utc).isoformat(),
+        text_source=text_source,
         extracted_invoice=extracted_invoice,
         validation=validation,
         po_matching=po_matching,
