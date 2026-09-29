@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { Loader2, Inbox } from "lucide-react";
 import { API_URL } from "@/lib/api";
 
 type Run = {
@@ -16,10 +17,10 @@ type Run = {
   decision: { decision: string };
 };
 
-const STATUS_COLORS: Record<string, string> = {
-  APPROVE: "var(--status-approve)",
-  FLAG: "var(--status-flag)",
-  REJECT: "var(--status-reject)",
+const STATUS_STYLE: Record<string, { color: string; bg: string }> = {
+  APPROVE: { color: "var(--status-approve)", bg: "var(--status-approve-bg)" },
+  FLAG: { color: "var(--status-flag)", bg: "var(--status-flag-bg)" },
+  REJECT: { color: "var(--status-reject)", bg: "var(--status-reject-bg)" },
 };
 
 export default function Dashboard() {
@@ -36,74 +37,94 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <div>
-      <h1 style={{ fontSize: "1.5rem", fontWeight: 600, marginBottom: "0.5rem" }}>
-        Invoice history
-      </h1>
-      <p style={{ color: "var(--text-muted)", marginBottom: "1.5rem" }}>
-        Every invoice processed, with its decision and reasoning.
-      </p>
+    <div className="mx-auto max-w-4xl">
+      <div className="mb-8">
+        <h1 className="text-2xl font-semibold tracking-tight">Invoice history</h1>
+        <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>
+          Every invoice processed, with its decision and reasoning.
+        </p>
+      </div>
 
-      {loading && <p style={{ color: "var(--text-muted)" }}>Loading...</p>}
+      {loading && (
+        <div className="flex items-center gap-2 py-10 text-sm" style={{ color: "var(--text-muted)" }}>
+          <Loader2 size={16} className="animate-spin" />
+          Loading history…
+        </div>
+      )}
 
       {!loading && runs.length === 0 && (
-        <p style={{ color: "var(--text-muted)" }}>
-          No invoices processed yet. Go to Live Run to process your first one.
-        </p>
+        <div
+          className="flex flex-col items-center gap-3 rounded-xl border border-dashed py-14 text-center"
+          style={{ borderColor: "var(--border)" }}
+        >
+          <Inbox size={28} style={{ color: "var(--text-muted)" }} />
+          <div className="text-sm" style={{ color: "var(--text-secondary)" }}>
+            No invoices processed yet.
+          </div>
+          <Link href="/" className="text-sm font-medium" style={{ color: "var(--accent)" }}>
+            Process your first one →
+          </Link>
+        </div>
       )}
 
       {!loading && runs.length > 0 && (
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr style={{ borderBottom: "1px solid var(--border)" }}>
-              <th style={headerStyle}>Invoice</th>
-              <th style={headerStyle}>Vendor</th>
-              <th style={headerStyle}>Total</th>
-              <th style={headerStyle}>Status</th>
-              <th style={headerStyle}>Processed</th>
-            </tr>
-          </thead>
-          <tbody>
-            {runs.map((run) => (
-              <tr key={run.run_id} style={{ borderBottom: "1px solid var(--border)" }}>
-                <td style={cellStyle}>
-                  <Link
-                    href={`/dashboard/${run.run_id}`}
-                    style={{ color: "var(--text-primary)", fontFamily: "var(--font-mono)" }}
+        <div className="overflow-hidden rounded-xl border" style={{ borderColor: "var(--border)" }}>
+          <table className="w-full border-collapse text-sm">
+            <thead>
+              <tr style={{ background: "var(--surface)", borderBottom: "1px solid var(--border)" }}>
+                {["Invoice", "Vendor", "Total", "Status", "Processed"].map((h) => (
+                  <th
+                    key={h}
+                    className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide"
+                    style={{ color: "var(--text-muted)" }}
                   >
-                    {run.extracted_invoice.invoice_number ?? "—"}
-                  </Link>
-                </td>
-                <td style={cellStyle}>{run.extracted_invoice.vendor_name ?? "—"}</td>
-                <td style={{ ...cellStyle, fontFamily: "var(--font-mono)" }}>
-                  ₹{run.extracted_invoice.total?.toLocaleString() ?? "—"}
-                </td>
-                <td style={cellStyle}>
-                  <span style={{ color: STATUS_COLORS[run.decision.decision], fontWeight: 600 }}>
-                    {run.decision.decision}
-                  </span>
-                </td>
-                <td style={{ ...cellStyle, color: "var(--text-muted)" }}>
-                  {new Date(run.timestamp).toLocaleString()}
-                </td>
+                    {h}
+                  </th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {runs.map((run) => {
+                const style = STATUS_STYLE[run.decision.decision];
+                return (
+                  <tr
+                    key={run.run_id}
+                    className="transition-colors"
+                    style={{ borderBottom: "1px solid var(--border-subtle)" }}
+                  >
+                    <td className="px-4 py-3">
+                      <Link
+                        href={`/dashboard/${run.run_id}`}
+                        className="font-medium hover:underline"
+                        style={{ color: "var(--text-primary)", fontFamily: "var(--font-mono)" }}
+                      >
+                        {run.extracted_invoice.invoice_number ?? "—"}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3" style={{ color: "var(--text-secondary)" }}>
+                      {run.extracted_invoice.vendor_name ?? "—"}
+                    </td>
+                    <td className="px-4 py-3" style={{ fontFamily: "var(--font-mono)", color: "var(--text-secondary)" }}>
+                      ₹{run.extracted_invoice.total?.toLocaleString() ?? "—"}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className="rounded-full px-2.5 py-1 text-xs font-semibold"
+                        style={{ background: style?.bg, color: style?.color }}
+                      >
+                        {run.decision.decision}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-xs" style={{ color: "var(--text-muted)" }}>
+                      {new Date(run.timestamp).toLocaleString()}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );
 }
-
-const headerStyle: React.CSSProperties = {
-  textAlign: "left",
-  padding: "0.6rem 0.5rem",
-  color: "var(--text-muted)",
-  fontWeight: 500,
-  fontSize: "0.85rem",
-};
-
-const cellStyle: React.CSSProperties = {
-  padding: "0.6rem 0.5rem",
-  fontSize: "0.9rem",
-};

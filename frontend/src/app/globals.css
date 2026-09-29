@@ -1,24 +1,54 @@
 @import "tailwindcss";
 
 :root {
-  --background: #12151A;
-  --surface: #1A1E25;
-  --border: #2A2F38;
-  --text-primary: #E8EAED;
-  --text-muted: #8B92A0;
+  --background: #0F1115;
+  --surface: #161A21;
+  --surface-hover: #1C212A;
+  --border: #262C36;
+  --border-subtle: #1C212A;
+  --text-primary: #EDEEF0;
+  --text-secondary: #A8AFBC;
+  --text-muted: #6B7280;
 
-  --status-approve: #4ADE80;
+  --accent: #6366F1;
+  --accent-hover: #7477F3;
+
+  --status-approve: #34D399;
+  --status-approve-bg: rgba(52, 211, 153, 0.1);
   --status-flag: #FBBF24;
+  --status-flag-bg: rgba(251, 191, 36, 0.1);
   --status-reject: #F87171;
+  --status-reject-bg: rgba(248, 113, 113, 0.1);
+}
+
+* {
+  box-sizing: border-box;
 }
 
 body {
   background: var(--background);
   color: var(--text-primary);
   font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
 @keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
 }

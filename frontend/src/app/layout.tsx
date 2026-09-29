@@ -26,10 +26,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} ${jetbrainsMono.variable}`}>
-        <Sidebar />
-        <main style={{ marginLeft: "220px", padding: "2rem" }}>
-          {children}
-        </main>
+      <Sidebar />
+      <main className="ml-60 min-h-screen px-8 py-10">
+        {children}
+      </main>
       </body>
     </html>
   );

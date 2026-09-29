@@ -1,7 +1,8 @@
 "use client";
 
+import { useState, useRef } from "react";
+import { UploadCloud, FileText, Loader2, CheckCircle2, Circle } from "lucide-react";
 import { API_URL } from "@/lib/api";
-import { useState } from "react";
 
 type RunResult = {
   run_id: string;
@@ -17,17 +18,16 @@ type RunResult = {
   po_matching: {
     checks: Record<string, boolean>;
     details: string[];
-    matched_po: { po_number: string; vendor_name: string; po_amount: number; remaining_amount?: number } | null;
   };
   decision: { decision: string; reason: string; supporting_details: string[] };
 };
 
 const STAGES = ["Upload", "Extract", "Validate", "PO Matching", "Decision"];
 
-const STATUS_COLORS: Record<string, string> = {
-  APPROVE: "var(--status-approve)",
-  FLAG: "var(--status-flag)",
-  REJECT: "var(--status-reject)",
+const STATUS_STYLE: Record<string, { color: string; bg: string }> = {
+  APPROVE: { color: "var(--status-approve)", bg: "var(--status-approve-bg)" },
+  FLAG: { color: "var(--status-flag)", bg: "var(--status-flag-bg)" },
+  REJECT: { color: "var(--status-reject)", bg: "var(--status-reject-bg)" },
 };
 
 export default function Home() {
@@ -35,183 +35,188 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<RunResult | null>(null);
   const [currentStage, setCurrentStage] = useState(0);
+  const [dragActive, setDragActive] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   async function handleUpload() {
     if (!file) return;
-
     setLoading(true);
     setResult(null);
     setCurrentStage(0);
 
     for (let i = 0; i < STAGES.length - 1; i++) {
-      await new Promise((r) => setTimeout(r, 350));
+      await new Promise((r) => setTimeout(r, 300));
       setCurrentStage(i + 1);
     }
 
     const formData = new FormData();
     formData.append("file", file);
 
-    const response = await fetch(`${API_URL}/invoices/upload`, {
-      method: "POST",
-      body: formData,
-    });
-
-    const data = await response.json();
-    setCurrentStage(STAGES.length);
-    setResult(data);
-    setLoading(false);
+    try {
+      const response = await fetch(`${API_URL}/invoices/upload`, {
+        method: "POST",
+        body: formData,
+      });
+      const data = await response.json();
+      setCurrentStage(STAGES.length);
+      setResult(data);
+    } finally {
+      setLoading(false);
+    }
   }
 
-  return (
-    <div style={{ maxWidth: "700px" }}>
-      <h1 style={{ fontSize: "1.5rem", fontWeight: 600, marginBottom: "0.5rem" }}>
-        Process an invoice
-      </h1>
-      <p style={{ color: "var(--text-muted)", marginBottom: "1.5rem" }}>
-        Upload a vendor invoice PDF to run it through extraction, validation, and PO matching.
-      </p>
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault();
+    setDragActive(false);
+    const dropped = e.dataTransfer.files?.[0];
+    if (dropped) setFile(dropped);
+  }
 
-      <div style={{ display: "flex", gap: "1rem", alignItems: "center", marginBottom: "2rem" }}>
+  const statusStyle = result ? STATUS_STYLE[result.decision.decision] : null;
+
+  return (
+    <div className="mx-auto max-w-3xl">
+      <div className="mb-8">
+        <h1 className="text-2xl font-semibold tracking-tight">Process an invoice</h1>
+        <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>
+          Upload a vendor invoice PDF to run extraction, validation, and PO matching.
+        </p>
+      </div>
+
+      {/* Upload zone */}
+      <div
+        onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
+        onDragLeave={() => setDragActive(false)}
+        onDrop={handleDrop}
+        onClick={() => inputRef.current?.click()}
+        className="cursor-pointer rounded-xl border border-dashed px-6 py-10 text-center transition-colors"
+        style={{
+          borderColor: dragActive ? "var(--accent)" : "var(--border)",
+          background: dragActive ? "var(--surface-hover)" : "var(--surface)",
+        }}
+      >
         <input
+          ref={inputRef}
           type="file"
           accept="application/pdf"
+          className="hidden"
           onChange={(e) => setFile(e.target.files?.[0] ?? null)}
         />
-        <button
-          onClick={handleUpload}
-          disabled={!file || loading}
-          style={{
-            padding: "0.5rem 1rem",
-            background: "var(--surface)",
-            border: "1px solid var(--border)",
-            borderRadius: "6px",
-            color: "var(--text-primary)",
-            cursor: loading ? "default" : "pointer",
-          }}
-        >
-          {loading ? (
-            <span style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <span
-                style={{
-                  width: "12px",
-                  height: "12px",
-                  border: "2px solid var(--text-muted)",
-                  borderTopColor: "var(--text-primary)",
-                  borderRadius: "50%",
-                  animation: "spin 0.6s linear infinite",
-                }}
-              />
-              Processing...
-            </span>
-          ) : (
-            "Upload & Process"
-          )}
-        </button>
+        {file ? (
+          <div className="flex flex-col items-center gap-2">
+            <FileText size={28} style={{ color: "var(--accent)" }} />
+            <div className="text-sm font-medium">{file.name}</div>
+            <div className="text-xs" style={{ color: "var(--text-muted)" }}>
+              Click or drop to replace
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center gap-2">
+            <UploadCloud size={28} style={{ color: "var(--text-muted)" }} />
+            <div className="text-sm font-medium">Drop an invoice PDF here</div>
+            <div className="text-xs" style={{ color: "var(--text-muted)" }}>
+              or click to browse
+            </div>
+          </div>
+        )}
       </div>
+
+      <button
+        onClick={handleUpload}
+        disabled={!file || loading}
+        className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all disabled:cursor-not-allowed disabled:opacity-40"
+        style={{
+          background: "var(--accent)",
+          color: "white",
+        }}
+        onMouseEnter={(e) => { if (file && !loading) e.currentTarget.style.background = "var(--accent-hover)"; }}
+        onMouseLeave={(e) => { e.currentTarget.style.background = "var(--accent)"; }}
+      >
+        {loading ? (
+          <>
+            <Loader2 size={16} className="animate-spin" />
+            Processing…
+          </>
+        ) : (
+          "Upload & Process"
+        )}
+      </button>
 
       {(loading || result) && (
         <div
-          style={{
-            background: "var(--surface)",
-            border: "1px solid var(--border)",
-            borderRadius: "8px",
-            padding: "1.25rem",
-          }}
+          className="mt-8 rounded-xl border p-6"
+          style={{ background: "var(--surface)", borderColor: "var(--border)", animation: "fadeIn 0.3s ease" }}
         >
-          <div style={{ marginBottom: "1.25rem" }}>
-            {STAGES.map((stage, i) => (
-              <div
-                key={stage}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.6rem",
-                  padding: "0.35rem 0",
-                  color: i < currentStage ? "var(--text-primary)" : "var(--text-muted)",
-                }}
-              >
-                <span>{i < currentStage ? "✓" : "○"}</span>
-                <span>{stage}</span>
-              </div>
-            ))}
+          <div className="mb-6 flex flex-col gap-2.5">
+            {STAGES.map((stage, i) => {
+              const done = i < currentStage;
+              return (
+                <div key={stage} className="flex items-center gap-2.5 text-sm">
+                  {done ? (
+                    <CheckCircle2 size={16} style={{ color: "var(--status-approve)" }} />
+                  ) : (
+                    <Circle size={16} style={{ color: "var(--border)" }} />
+                  )}
+                  <span style={{ color: done ? "var(--text-primary)" : "var(--text-muted)" }}>{stage}</span>
+                </div>
+              );
+            })}
           </div>
 
-          {result && (
+          {result && statusStyle && (
             <>
               <div
-                style={{
-                  padding: "1rem",
-                  borderRadius: "6px",
-                  background: "var(--background)",
-                  border: `1px solid ${STATUS_COLORS[result.decision.decision] ?? "var(--border)"}`,
-                  marginBottom: "1rem",
-                }}
+                className="mb-4 rounded-lg border p-4"
+                style={{ background: statusStyle.bg, borderColor: statusStyle.color }}
               >
-                <div
-                  style={{
-                    fontWeight: 700,
-                    fontSize: "1.1rem",
-                    color: STATUS_COLORS[result.decision.decision] ?? "var(--text-primary)",
-                    marginBottom: "0.25rem",
-                  }}
-                >
+                <div className="text-base font-bold" style={{ color: statusStyle.color }}>
                   {result.decision.decision}
                 </div>
-              <div style={{ color: "var(--text-muted)" }}>{result.decision.reason}</div>
-            </div>
-
-            {result.validation.warnings.length > 0 && (
-              <div
-                style={{
-                  padding: "0.75rem 1rem",
-                  borderRadius: "6px",
-                  background: "var(--background)",
-                  border: "1px solid var(--status-flag)",
-                  marginBottom: "1rem",
-                  fontSize: "0.85rem",
-                }}
-              >
-                <div style={{ color: "var(--status-flag)", fontWeight: 600, marginBottom: "0.3rem" }}>
-                  ⚠ Non-blocking warnings
+                <div className="mt-0.5 text-sm" style={{ color: "var(--text-secondary)" }}>
+                  {result.decision.reason}
                 </div>
-                {result.validation.warnings.map((w, i) => (
-                  <div key={i} style={{ color: "var(--text-muted)", padding: "0.1rem 0" }}>
-                    — {w}
-                  </div>
-                ))}
               </div>
-            )}
 
-              <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.9rem", lineHeight: 1.7 }}>
-                <div>Invoice: {result.extracted_invoice.invoice_number}</div>
-                <div>Vendor: {result.extracted_invoice.vendor_name}</div>
-                <div>PO: {result.extracted_invoice.po_number}</div>
-                <div>Total: ₹{result.extracted_invoice.total?.toLocaleString()}</div>
+              {result.validation.warnings?.length > 0 && (
+                <div
+                  className="mb-4 rounded-lg border p-3.5 text-sm"
+                  style={{ background: "var(--status-flag-bg)", borderColor: "var(--status-flag)" }}
+                >
+                  <div className="mb-1 font-semibold" style={{ color: "var(--status-flag)" }}>
+                    ⚠ Non-blocking warnings
+                  </div>
+                  {result.validation.warnings.map((w, i) => (
+                    <div key={i} style={{ color: "var(--text-secondary)" }}>— {w}</div>
+                  ))}
+                </div>
+              )}
+
+              <div
+                className="mb-4 grid grid-cols-2 gap-x-6 gap-y-2 rounded-lg border p-4 text-sm"
+                style={{ borderColor: "var(--border-subtle)", fontFamily: "var(--font-mono)" }}
+              >
+                <div><span style={{ color: "var(--text-muted)" }}>Invoice </span>{result.extracted_invoice.invoice_number}</div>
+                <div><span style={{ color: "var(--text-muted)" }}>Vendor </span>{result.extracted_invoice.vendor_name}</div>
+                <div><span style={{ color: "var(--text-muted)" }}>PO </span>{result.extracted_invoice.po_number}</div>
+                <div><span style={{ color: "var(--text-muted)" }}>Total </span>₹{result.extracted_invoice.total?.toLocaleString()}</div>
               </div>
 
               {result.extracted_invoice.field_confidence && (
-                <div style={{ marginTop: "1rem" }}>
-                  <div style={{ color: "var(--text-muted)", marginBottom: "0.4rem" }}>
+                <div className="mb-4">
+                  <div className="mb-2 text-xs font-medium uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
                     AI extraction confidence
                   </div>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+                  <div className="flex flex-wrap gap-1.5">
                     {Object.entries(result.extracted_invoice.field_confidence).map(([field, score]) => {
-                      const numScore = Number(score);
-                      const color =
-                        numScore >= 0.8 ? "var(--status-approve)" : numScore >= 0.6 ? "var(--status-flag)" : "var(--status-reject)";
+                      const n = Number(score);
+                      const color = n >= 0.8 ? "var(--status-approve)" : n >= 0.6 ? "var(--status-flag)" : "var(--status-reject)";
                       return (
                         <span
                           key={field}
-                          style={{
-                            fontSize: "0.75rem",
-                            padding: "0.2rem 0.5rem",
-                            borderRadius: "4px",
-                            border: `1px solid ${color}`,
-                            color: color,
-                            fontFamily: "var(--font-mono)",
-                          }}
+                          className="rounded-md border px-2 py-0.5 text-xs"
+                          style={{ borderColor: color, color, fontFamily: "var(--font-mono)" }}
                         >
-                          {field}: {(numScore * 100).toFixed(0)}%
+                          {field} {(n * 100).toFixed(0)}%
                         </span>
                       );
                     })}
@@ -219,15 +224,17 @@ export default function Home() {
                 </div>
               )}
 
-              <div style={{ marginTop: "1rem" }}>
-                <div style={{ color: "var(--text-muted)", marginBottom: "0.4rem" }}>
+              <div>
+                <div className="mb-2 text-xs font-medium uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
                   Reasoning trail
                 </div>
-                {result.po_matching.details.map((detail, i) => (
-                  <div key={i} style={{ fontSize: "0.85rem", padding: "0.15rem 0" }}>
-                    — {detail}
-                  </div>
-                ))}
+                <div className="space-y-1.5">
+                  {result.po_matching.details.map((d, i) => (
+                    <div key={i} className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+                      <span style={{ color: "var(--text-muted)" }}>— </span>{d}
+                    </div>
+                  ))}
+                </div>
               </div>
             </>
           )}
