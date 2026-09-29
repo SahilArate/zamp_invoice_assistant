@@ -64,3 +64,6 @@ def check_duplicate(vendor_name: str, invoice_number: str, invoice_date: str, to
         ):
             return True
     return False
+
+def clear_all_runs() -> None:
+    _save_all_runs([])

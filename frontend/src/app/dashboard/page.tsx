@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Loader2, Inbox } from "lucide-react";
 import { API_URL } from "@/lib/api";
+import { Trash2 } from "lucide-react";
 
 type Run = {
   run_id: string;
@@ -38,11 +39,26 @@ export default function Dashboard() {
 
   return (
     <div className="mx-auto max-w-4xl">
-      <div className="mb-8">
-        <h1 className="text-2xl font-semibold tracking-tight">Invoice history</h1>
-        <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>
-          Every invoice processed, with its decision and reasoning.
-        </p>
+      <div className="mb-8 flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Invoice history</h1>
+          <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>
+            Every invoice processed, with its decision and reasoning.
+          </p>
+        </div>
+        {runs.length > 0 && (
+          <button
+            onClick={async () => {
+              if (!confirm("Clear all run history? This cannot be undone.")) return;
+              await fetch(`${API_URL}/invoices/runs`, { method: "DELETE" });
+              setRuns([]);
+            }}
+            className="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium"
+            style={{ borderColor: "var(--border)", color: "var(--text-secondary)" }}
+          >
+            <Trash2 size={13} /> Clear history
+          </button>
+        )}
       </div>
 
       {loading && (

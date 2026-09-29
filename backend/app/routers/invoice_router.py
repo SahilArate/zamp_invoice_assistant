@@ -7,13 +7,17 @@ from app.services.ai_extraction_service import extract_invoice_fields
 from app.services.validation_service import validate_invoice
 from app.services.po_matching_service import match_invoice_to_po
 from app.services.decision_service import make_decision
-from app.services.run_service import save_run, get_all_runs, get_run_by_id, check_duplicate
-
+from app.services.run_service import save_run, get_all_runs, get_run_by_id, check_duplicate, clear_all_runs
 router = APIRouter(prefix="/invoices", tags=["Invoices"])
 
 UPLOAD_DIR = Path(__file__).resolve().parent.parent.parent / "sample_data" / "uploads"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
+
+@router.delete("/runs")
+async def delete_all_runs():
+    clear_all_runs()
+    return {"status": "cleared"}
 
 @router.post("/upload")
 async def upload_invoice(file: UploadFile = File(...)):
