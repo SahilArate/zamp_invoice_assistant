@@ -1,0 +1,6 @@
+venv/
+__pycache__/
+*.pyc
+.env
+sample_data/uploads/
+sample_data/runs.json

@@ -56,7 +56,10 @@ def extract_text_from_pdf(file_path: Path) -> dict:
 
 
 def extract_text_via_ocr(file_path: Path) -> str:
-    images = convert_from_path(str(file_path), poppler_path=POPPLER_PATH)
+    if POPPLER_PATH:
+        images = convert_from_path(str(file_path), poppler_path=POPPLER_PATH)
+    else:
+        images = convert_from_path(str(file_path))
 
     ocr_text = ""
     for image in images:
