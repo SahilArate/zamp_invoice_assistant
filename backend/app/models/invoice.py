@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 
 class LineItem(BaseModel):
@@ -19,3 +19,4 @@ class ExtractedInvoice(BaseModel):
     tax: Optional[float] = None
     total: Optional[float] = None
     currency: Optional[str] = "INR"
+    field_confidence: Dict[str, float] = {}

@@ -1,5 +1,7 @@
 from app.models.invoice import ExtractedInvoice
 
+LOW_CONFIDENCE_THRESHOLD = 0.6
+
 
 def validate_invoice(invoice: ExtractedInvoice) -> dict:
     issues = []
@@ -14,6 +16,16 @@ def validate_invoice(invoice: ExtractedInvoice) -> dict:
     for field_name, value in required_fields.items():
         if value is None or value == "":
             issues.append(f"Missing required field: {field_name}")
+
+    low_confidence_fields = [
+        field for field, score in invoice.field_confidence.items()
+        if score < LOW_CONFIDENCE_THRESHOLD
+    ]
+    if low_confidence_fields:
+        issues.append(
+            f"AI extraction confidence is low for: {', '.join(low_confidence_fields)}. "
+            f"These values should be manually verified before this decision is trusted."
+        )
 
     if invoice.line_items and invoice.subtotal is not None:
         calculated_subtotal = round(sum(item.amount for item in invoice.line_items), 2)
@@ -32,4 +44,5 @@ def validate_invoice(invoice: ExtractedInvoice) -> dict:
     return {
         "is_valid": len(issues) == 0,
         "issues": issues,
+        "low_confidence_fields": low_confidence_fields,
     }

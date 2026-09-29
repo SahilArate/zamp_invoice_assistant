@@ -18,8 +18,13 @@ Given the raw text of an invoice below, extract the following fields as JSON:
 - tax (number)
 - total (number)
 - currency (string, default "INR")
+- field_confidence (object): for EACH of these fields — vendor_name, invoice_number, invoice_date, po_number, subtotal, tax, total —
+  give a confidence score between 0.0 and 1.0 representing how certain you are that you read that specific value correctly from the text.
+  A score of 1.0 means the value was printed clearly and unambiguously. A lower score (e.g. 0.5) means the value was unclear,
+  partially cut off, ambiguous, or you had to guess/infer it.
 
-If a field is missing or unclear, set it to null. Only respond with valid JSON, nothing else.
+If a field is missing or unclear, set its value to null and its confidence to a low score (e.g. 0.1-0.3).
+Only respond with valid JSON, nothing else.
 
 INVOICE TEXT:
 {invoice_text}
