@@ -34,16 +34,25 @@ def match_invoice_to_po(invoice: ExtractedInvoice) -> dict:
             f"Vendor mismatch: invoice says '{invoice.vendor_name}', PO says '{po.vendor_name}'."
         )
 
+    is_first_invoice_on_po = po.used_amount == 0
+
     if invoice.total is not None:
-        variance_percent = abs(invoice.total - po.po_amount) / po.po_amount * 100
-        if variance_percent <= AMOUNT_TOLERANCE_PERCENT:
+        if is_first_invoice_on_po:
+            variance_percent = abs(invoice.total - po.po_amount) / po.po_amount * 100
+            if variance_percent <= AMOUNT_TOLERANCE_PERCENT:
+                checks["amount_within_tolerance"] = True
+                details.append(
+                    f"Amount within tolerance: {variance_percent:.1f}% variance against full PO amount (limit {AMOUNT_TOLERANCE_PERCENT}%)."
+                )
+            else:
+                details.append(
+                    f"Amount variance too high: {variance_percent:.1f}% against full PO amount (limit {AMOUNT_TOLERANCE_PERCENT}%)."
+                )
+        else:
             checks["amount_within_tolerance"] = True
             details.append(
-                f"Amount within tolerance: {variance_percent:.1f}% variance (limit {AMOUNT_TOLERANCE_PERCENT}%)."
-            )
-        else:
-            details.append(
-                f"Amount variance too high: {variance_percent:.1f}% (limit {AMOUNT_TOLERANCE_PERCENT}%)."
+                f"PO already has prior usage (₹{po.used_amount} used) — this is a partial/split invoice, "
+                f"so tolerance is checked against remaining balance instead, not the full PO amount."
             )
 
     if invoice.total is not None:
